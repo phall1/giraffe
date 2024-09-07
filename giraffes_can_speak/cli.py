@@ -5,7 +5,7 @@ from rich.console import Console
 import typer
 
 from giraffes_can_speak.openai.embeddings import create_embeddings
-from giraffes_can_speak.pinecone.db_ops import upsert_embeddings
+from giraffes_can_speak.pinecone.db_ops import query_embeddings, upsert_embeddings
 from giraffes_can_speak.youtube.transcript_availability import (
     analyze_channel_transcripts,
     get_channel_id_from_handle,
@@ -80,10 +80,7 @@ def discord_demo(question: str):
         team_house_user_prompt,
     )
 
-    pinecone = clients.pinecone
     openai = clients.openai
-
-    index = pinecone.Index("teamhouse")
 
     # Get the embedding for the question
     emb_model = "text-embedding-3-small"
@@ -91,7 +88,7 @@ def discord_demo(question: str):
     question_embedding = response.data[0].embedding
 
     # Query Pinecone
-    results = index.query(question_embedding, top_k=5, include_metadata=True)
+    results = query_embeddings(question_embedding)
     context = "\n".join([result["metadata"]["text"] for result in results["matches"]])
 
     # Get completion from OpenAI
